@@ -806,17 +806,27 @@ class Dataset:
         old_data,
         new_data
     ):
+
+        old_data = old_data.to_numpy()
+        new_data = new_data.to_numpy()
+
+        pca = PCA(n_components=0.99)
+        pca.fit(old_data)
+        
+        new_data = pca.transform(new_data)
+        old_data = pca.transform(old_data)
+
         add_to_dict(
             stats_dict,
             "X-KS-distance",
             kolmogorov_smirnov_distance(
-                old_data.to_numpy(), new_data.to_numpy())
+                old_data, new_data)
             )
         add_to_dict(
             stats_dict,
             "X-KS-p-val",
             kolmogorov_smirnov_statistical_test(
-                old_data.to_numpy(), new_data.to_numpy())
+                old_data, new_data)
             )
 
     def __compute_data_related_features(
