@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.spatial import distance
 from scipy.stats import pearsonr
 from sklearn.metrics import confusion_matrix
+from scipy.stats import ks_2samp
 
 import defs
 
@@ -36,13 +37,56 @@ def get_stat(data: np.ndarray, stat: str):
         return np.percentile(data, 99)
 
 
-def compute_feature_jsd(
+def kolmogorov_smirnov_distance(source: np.ndarray, target: np.ndarray):
+    results = []
+    if len(source.shape) > 1:
+        for i in range(source.shape[1]):
+            feature_tr = source[:, i]
+            feature_te = target[:, i]
+            result, _ = ks_2samp(feature_tr, feature_te)
+            m, n = feature_tr.shape[0], feature_te.shape[0] 
+            en = np.sqrt((m * n) / (m + n))
+            results.append(result * en)
+        results = np.array(results)
+        result = np.max(results)
+        return result
+    elif len(source.shape) == 1:
+        feature_tr = source
+        feature_te = target
+        result, _ = ks_2samp(feature_tr, feature_te)
+        m, n = feature_tr.shape[0], feature_te.shape[0] 
+        en = np.sqrt((m * n) / (m + n))
+        return result * en
+
+
+def kolmogorov_smirnov_statistical_test(source: np.ndarray, target: np.ndarray):
+    results = []
+    if len(source.shape) > 1:
+        for i in range(source.shape[1]):
+            feature_tr = source[:, i]
+            feature_te = target[:, i]
+            _ , p_val = ks_2samp(feature_tr, feature_te)
+            results.append(p_val)
+        results = np.array(results)
+        result = min(np.min(results), 1.0)
+        return result
+    elif len(source.shape) == 1:
+        feature_tr = source
+        feature_te = target
+        _ , p_val = ks_2samp(feature_tr, feature_te)
+        return p_val
+
+
+# TODO ADD INPUT CASE
+
+def compute_feature(
     feature: str,
     stats_dict: dict,
     data: pd.DataFrame,
     index: int,  # encodes the end index of the target window
     size: int,  # encodes how many time intervals are in the target window
     val_feature: np.ndarray,  # feature in the validation set to use as ref window when there is not enough old data
+    distance_metric: str # distance metric used
 ):
     avg_transactions = 1245  # int(df_retrain["num_transactions"].mean() // 1)
     if "uncertainty_fraud" in feature:
@@ -92,14 +136,29 @@ def compute_feature_jsd(
     print(f"ref-win size: {len(ref_win)}")
     print(f"target-win size: {len(target_win)}")
 
-    ref_win_hist, bins = np.histogram(ref_win)
-    add_to_dict(
-        stats_dict,
-        f"{feature}-JSD",
-        distance.jensenshannon(
-            p=ref_win_hist, q=np.histogram(target_win, bins=bins)[0]
-        ),
-    )
+    if distance_metric == "JSD-distance":
+        ref_win_hist, bins = np.histogram(ref_win)
+        add_to_dict(
+            stats_dict,
+            f"{feature}-JSD",
+            distance.jensenshannon(
+                p=ref_win_hist, q=np.histogram(target_win, bins=bins)[0]
+            ),
+        )
+    elif distance_metric == "KS-distance":
+        add_to_dict(
+            stats_dict,
+            f"{feature}-KS-distance",
+            kolmogorov_smirnov_distance(
+                ref_win, target_win)
+            )
+    elif distance_metric == "KS-p-val":
+        add_to_dict(
+            stats_dict,
+            f"{feature}-KS-p-val",
+            kolmogorov_smirnov_statistical_test(
+                ref_win, target_win)
+            )
 
 
 def compute_stats(
