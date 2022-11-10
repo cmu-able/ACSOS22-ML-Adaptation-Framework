@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sklearn import base
+from sklearn.decomposition import PCA
 
 import defs
 from data_preprocess_IEEE_CIS import (
