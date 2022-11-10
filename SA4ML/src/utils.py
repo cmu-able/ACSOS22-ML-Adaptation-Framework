@@ -146,6 +146,8 @@ def compute_feature(
             ),
         )
     elif distance_metric == "KS-distance":
+        ref_win = np.array(ref_win)
+        target_win = np.array(target_win)
         add_to_dict(
             stats_dict,
             f"{feature}-KS-distance",
@@ -153,6 +155,8 @@ def compute_feature(
                 ref_win, target_win)
             )
     elif distance_metric == "KS-p-val":
+        ref_win = np.array(ref_win)
+        target_win = np.array(target_win)
         add_to_dict(
             stats_dict,
             f"{feature}-KS-p-val",
