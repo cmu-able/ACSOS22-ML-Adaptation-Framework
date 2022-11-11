@@ -811,24 +811,36 @@ class Dataset:
         old_data = old_data.to_numpy()
         new_data = new_data.to_numpy()
 
-        pca = PCA(n_components=0.99)
-        pca.fit(old_data)
-        
-        new_data = pca.transform(new_data)
-        old_data = pca.transform(old_data)
+        if old_data.shape[0] > 0:
+            pca = PCA(n_components=0.99)
+            pca.fit(old_data)
+            
+            new_data = pca.transform(new_data)
+            old_data = pca.transform(old_data)
 
-        add_to_dict(
-            stats_dict,
-            "X-KS-distance",
-            kolmogorov_smirnov_distance(
-                old_data, new_data)
-            )
-        add_to_dict(
-            stats_dict,
-            "X-KS-p-val",
-            kolmogorov_smirnov_statistical_test(
-                old_data, new_data)
-            )
+            add_to_dict(
+                stats_dict,
+                "X-KS-distance",
+                kolmogorov_smirnov_distance(
+                    old_data, new_data)
+                )
+            add_to_dict(
+                stats_dict,
+                "X-KS-p-val",
+                kolmogorov_smirnov_statistical_test(
+                    old_data, new_data)
+                )
+        else:
+            add_to_dict(
+                stats_dict,
+                "X-KS-distance",
+                0
+                )
+            add_to_dict(
+                stats_dict,
+                "X-KS-p-val",
+                1
+                )
 
     def __compute_data_related_features(
         self,
@@ -854,7 +866,7 @@ class Dataset:
 
         old_data = test_data.loc[(test_data["timestamp"] < tmp_dict["prev_timestamp"])]
 
-        self.__compute_stats_differences(stats_dict, new_data, old_data)
+        self.__compute_stats_differences(stats_dict, old_data, new_data)
 
         # compute correlation coefficient between old and new data
         self.__compute_corrcoef(
