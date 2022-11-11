@@ -866,7 +866,7 @@ class Dataset:
 
         old_data = test_data.loc[(test_data["timestamp"] < tmp_dict["prev_timestamp"])]
 
-        self.__compute_stats_differences(stats_dict, old_data, new_data)
+        self.__compute_stats_differences(stats_dict, old_data[self.features].copy(), batch[self.features].copy())
 
         # compute correlation coefficient between old and new data
         self.__compute_corrcoef(
