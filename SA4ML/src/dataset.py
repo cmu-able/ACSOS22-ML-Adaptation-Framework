@@ -965,48 +965,50 @@ class Dataset:
         stats_dict,
         sampling_method,
     ):
+        from multiprocessing import Pool
 
-        # compare retrain and no retrain until last retrain timestamp
-        for dataset_name, dataset in datasets_metrics.items():
-            df_times = datasets_times[dataset_name]
+        with Pool(processes=4) as pool:
 
-            # this corresponds to the no retrain case
-            if int(dataset_name.split("-")[1].split("_")[1]) == 0:
-                continue
+            # compare retrain and no retrain until last retrain timestamp
+            for dataset_name, dataset in datasets_metrics.items():
+                df_times = datasets_times[dataset_name]
 
-            # this corresponds to the last model retrain
-            if (df_times["retrain_timestamp"][1]) >= self.test_data["timestamp"].max():
-                continue
-
-            for prev_dataset_name, prev_dataset in datasets_metrics.items():
-                # we only want to analyze models that were trained before the current timestamp
-                if int(prev_dataset_name.split("-")[1].split("_")[1]) >= int(
-                    dataset_name.split("-")[1].split("_")[1]
-                ):
+                # this corresponds to the no retrain case
+                if int(dataset_name.split("-")[1].split("_")[1]) == 0:
                     continue
 
-                print("\n ----------------------------------------------------")
-                print(f"[D] Current retrain: {dataset_name}")
-                print(f"[D] Previous retrain: {prev_dataset_name}")
+                # this corresponds to the last model retrain
+                if (df_times["retrain_timestamp"][1]) >= self.test_data["timestamp"].max():
+                    continue
 
-                for tcol in df_times.columns.values:
-                    if "times" in tcol or "thresholds" in tcol:
-                        add_to_dict(
-                            stats_dict,
-                            tcol,
-                            df_times.iloc[1][tcol],
-                        )
+                for prev_dataset_name, prev_dataset in datasets_metrics.items():
+                    # we only want to analyze models that were trained before the current timestamp
+                    if int(prev_dataset_name.split("-")[1].split("_")[1]) >= int(
+                        dataset_name.split("-")[1].split("_")[1]
+                    ):
+                        continue
 
-                self.__compute_features(
-                    stats_dict,
-                    [dataset_name, prev_dataset_name],
-                    dataset,
-                    datasets_times,
-                    prev_dataset,
-                    sampling_method,
-                    time_interval,
-                    datasets_times[f"timeInterval_{time_interval}-retrainPeriod_0"],
-                )
+                    print("\n ----------------------------------------------------")
+                    print(f"[D] Current retrain: {dataset_name}")
+                    print(f"[D] Previous retrain: {prev_dataset_name}")
+
+                    for tcol in df_times.columns.values:
+                        if "times" in tcol or "thresholds" in tcol:
+                            add_to_dict(
+                                stats_dict,
+                                tcol,
+                                df_times.iloc[1][tcol],
+                            )
+
+                    pool.apply_async(self.__compute_features, (stats_dict,
+                        [dataset_name, prev_dataset_name],
+                        dataset,
+                        datasets_times,
+                        prev_dataset,
+                        sampling_method,
+                        time_interval,
+                        datasets_times[f"timeInterval_{time_interval}-retrainPeriod_0"],))
+
 
     def generate_new_dataset(
         self,
