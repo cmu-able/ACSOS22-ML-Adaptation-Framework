@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sklearn import base
+from sklearn.decomposition import PCA
 
 import defs
 from data_preprocess_IEEE_CIS import (
@@ -23,13 +24,15 @@ from eval_metrics import (
 from prism import Prism
 from utils import (
     add_to_dict,
-    compute_feature_jsd,
+    compute_feature,
     compute_performance_related_features,
     compute_stats,
     compute_uncertainty,
     compute_uncertainty_stats,
     get_correlation,
     get_dataset_path,
+    kolmogorov_smirnov_distance,
+    kolmogorov_smirnov_statistical_test,
     load_data,
     save_results,
 )
@@ -798,6 +801,47 @@ class Dataset:
 
         return tmp_dict
 
+    def __compute_stats_differences(
+        self,
+        stats_dict: dict,
+        old_data,
+        new_data
+    ):
+
+        old_data = old_data.to_numpy()
+        new_data = new_data.to_numpy()
+
+        if old_data.shape[0] > 0:
+            pca = PCA(n_components=0.99)
+            pca.fit(old_data)
+            
+            new_data = pca.transform(new_data)
+            old_data = pca.transform(old_data)
+
+            add_to_dict(
+                stats_dict,
+                "X-KS-distance",
+                kolmogorov_smirnov_distance(
+                    old_data, new_data)
+                )
+            add_to_dict(
+                stats_dict,
+                "X-KS-p-val",
+                kolmogorov_smirnov_statistical_test(
+                    old_data, new_data)
+                )
+        else:
+            add_to_dict(
+                stats_dict,
+                "X-KS-distance",
+                0
+                )
+            add_to_dict(
+                stats_dict,
+                "X-KS-p-val",
+                1
+                )
+
     def __compute_data_related_features(
         self,
         stats_dict: dict,
@@ -821,6 +865,8 @@ class Dataset:
         new_data[self.target_column] = batch[self.target_column].copy()
 
         old_data = test_data.loc[(test_data["timestamp"] < tmp_dict["prev_timestamp"])]
+
+        self.__compute_stats_differences(stats_dict, old_data[self.features].copy(), batch[self.features].copy())
 
         # compute correlation coefficient between old and new data
         self.__compute_corrcoef(
@@ -876,14 +922,16 @@ class Dataset:
                 val_features["val_uncertainty_legit"][0],
             ],
         ):
-            compute_feature_jsd(
-                feature,
-                stats_dict,
-                prev_dataset,
-                index_dict["index_low"],
-                tmp_dict["retrain_period"] // time_interval,
-                val_feature,
-            )
+            for statistical_ind in ["JSD-distance", "KS-distance", "KS-p-val"]:
+                compute_feature(
+                    feature,
+                    stats_dict,
+                    prev_dataset,
+                    index_dict["index_low"],
+                    tmp_dict["retrain_period"] // time_interval,
+                    val_feature,
+                    statistical_ind
+                )
 
         compute_stats(
             stats_dict,

@@ -15,7 +15,7 @@ from time_series import (
     build_time_series_and_predict,
     set_up_time_series_hyperparam_tuning,
 )
-from utils import add_to_dict, compute_feature_jsd, exec_bash_cmd, get_dataset_path
+from utils import add_to_dict, compute_feature, exec_bash_cmd, get_dataset_path
 from utils_IEEE_CIS import add_hour_day_month_ieee_cis, load_ieee_cis_train_set
 
 
@@ -366,7 +366,7 @@ class Prism:
         )
 
         scores_JSD_dict = {}
-        compute_feature_jsd(
+        compute_feature(
             "scores",
             scores_JSD_dict,
             pd.DataFrame(
