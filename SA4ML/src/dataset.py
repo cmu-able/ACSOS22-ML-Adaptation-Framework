@@ -865,7 +865,7 @@ class Dataset:
         new_data = batch[self.features].copy()
         new_data[self.target_column] = batch[self.target_column].copy()
 
-        old_data = test_data.loc[((tmp_dict["prev_timestamp"] - defs.OLD_DATA_SIZE * time_interval) <= (test_data["timestamp"])) & (test_data["timestamp"] < tmp_dict["prev_timestamp"])]
+        old_data = test_data.loc[((tmp_dict["prev_timestamp"] + pd.DateOffset(hours=-defs.OLD_DATA_SIZE * time_interval)) <= (test_data["timestamp"])) & (test_data["timestamp"] < tmp_dict["prev_timestamp"])]
 
         self.__compute_stats_differences(stats_dict, old_data[self.features].copy(), batch[self.features].copy())
 
