@@ -849,6 +849,7 @@ class Dataset:
         dataset_names,
         datasets_times,
         sampling_method,
+        time_interval
     ):
         test_data = self.test_data.copy()
 
@@ -864,7 +865,7 @@ class Dataset:
         new_data = batch[self.features].copy()
         new_data[self.target_column] = batch[self.target_column].copy()
 
-        old_data = test_data.loc[(test_data["timestamp"] < tmp_dict["prev_timestamp"])]
+        old_data = test_data.loc[((tmp_dict["prev_timestamp"] - defs.OLD_DATA_SIZE * time_interval) <= (test_data["timestamp"])) & (test_data["timestamp"] < tmp_dict["prev_timestamp"])]
 
         self.__compute_stats_differences(stats_dict, old_data[self.features].copy(), batch[self.features].copy())
 
@@ -955,6 +956,7 @@ class Dataset:
             dataset_names,
             datasets_times,
             sampling_method,
+            time_interval,
         )
 
     def estimate_benefits(
@@ -964,6 +966,7 @@ class Dataset:
         datasets_times,
         stats_dict,
         sampling_method,
+        max_time_interval
     ):
 
         # compare retrain and no retrain until last retrain timestamp
@@ -980,9 +983,11 @@ class Dataset:
 
             for prev_dataset_name, prev_dataset in datasets_metrics.items():
                 # we only want to analyze models that were trained before the current timestamp
-                if int(prev_dataset_name.split("-")[1].split("_")[1]) >= int(
-                    dataset_name.split("-")[1].split("_")[1]
-                ):
+
+                prev_date = int(prev_dataset_name.split("-")[1].split("_")[1])
+                curr_date = int(dataset_name.split("-")[1].split("_")[1])
+
+                if prev_date >= curr_date or (curr_date - prev_date) >= defs.MAX_TIME_INTERVAL * time_interval:
                     continue
 
                 print("\n ----------------------------------------------------")

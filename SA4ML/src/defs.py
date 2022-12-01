@@ -44,6 +44,10 @@ USE_NOP_MODELS = ["random_forest"]
 DATASET_NAME = "ieee-cis"
 MAX_TIME = 3160
 
+MAX_TIME_INTERVAL = 30
+
+OLD_DATA_SIZE = 90
+
 # The following definitions are only used to generate the retrain files
 NUM_RUNS = 1
 RETRAIN_MODES = ["single"]
