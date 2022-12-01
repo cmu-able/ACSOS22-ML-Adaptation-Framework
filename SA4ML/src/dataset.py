@@ -966,7 +966,6 @@ class Dataset:
         datasets_times,
         stats_dict,
         sampling_method,
-        max_time_interval
     ):
 
         # compare retrain and no retrain until last retrain timestamp
