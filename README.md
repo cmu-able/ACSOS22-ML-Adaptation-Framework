@@ -2,6 +2,9 @@
 
 This document details how to set-up the environment for reproducing the results from the paper **A Framework for Adapting Machine Learning Components**, accepted at ACSOS 2022.
 
+An extension of this work, **Self-Adapting Machine Learning-based Systems via a Probabilistic Model Checking Framework**, which accounts for label delay, and published at TAAS 2024 is available here:
+[https://github.com/marialcasimiro/Self-Adaptive-ML-Systems](https://github.com/marialcasimiro/Self-Adaptive-ML-Systems)
+
 ## Citing
 
 If you use our work, please cite:
@@ -258,7 +261,8 @@ python3 generate_retrain_dataset.py
 time python3 generate_retrain_dataset.py
 ```
 
-This processes the retrain files obtained previously and computes metrics such as variations in the distributions of thescores of the fraud detection model. Generating this dataset is also computationally expensive (also ≈12 hours), however both this and the previous step should be performed only once. The generated dataset is saved to `~/SA4ML/datasets/ieee-fraud-detection/new/`
+This processes the retrain files obtained previously and computes metrics such as variations in the distributions of the
+scores of the fraud detection model. Generating this dataset is also computationally expensive (also ≈12 hours), however both this and the previous step should be performed only once. The generated dataset is saved to `~/SA4ML/datasets/ieee-fraud-detection/new/`
 
 
 ### 3. Re-generating baselines and adaptive framework results<a name="re-generate-results"></a>
